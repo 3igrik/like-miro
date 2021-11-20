@@ -12,4 +12,5 @@ export const drawSelectedRect = (ctx, x, y, width, height) => {
 	ctx.strokeStyle="black";
   ctx.rect(x, y, width, height);
 	ctx.stroke();
+  
 }
