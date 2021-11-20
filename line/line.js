@@ -1,10 +1,15 @@
-const ARROWS_LENGTH = 20; // length of head in pixels
+const ARROWS_LENGTH = 10; // length of head in pixels
+const PX_FROM_SIDE = 15; // indent from borders in px
+const MIN_MARGIN_FROM_BORDER = 3;  // MIN indent from borders in px
 
-const drawArrows = (ctx, x, y, x2, y2) => {
-  let headLen = ARROWS_LENGTH; // 
+const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
+  let headLen = ARROWS_LENGTH;
   let differenceX = Math.abs(x2 - x);
   let differenceY = Math.abs(y2 - y);
-  let angle = Math.atan2(differenceY, differenceX);
+  lineCoords.splice(0, lineCoords.length);
+
+  let angle = Math.atan2(0, differenceX / 2);
+
   ctx.moveTo(x, y);
   lineCoords.push([x, y]);
 
@@ -387,7 +392,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([needToX.x - PX_FROM_SIDE, toRect.y - PX_FROM_SIDE]);
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
                 }
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               } else {
                 if (fromRectY2Higher) {
                   let marginFromBorder = toRect.y - fromRect.y2 >= PX_FROM_SIDE * 2 ? PX_FROM_SIDE : MIN_MARGIN_FROM_BORDER;
@@ -399,7 +403,7 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([toRect.x - marginFromBorder, toRect.y - PX_FROM_SIDE]);
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
                 }
-                angle = Math.atan2(PX_FROM_SIDE, 0);
+          lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
               }
             } else if (toSide === "right") {
               let higherRect = fromRect.y < toRect.y ? fromRect : toRect;
@@ -446,11 +450,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needTo.x - PX_FROM_SIDE, lowerY2Rect.y2 + PX_FROM_SIDE]);
                 lineCoords.push([x2, lowerY2Rect.y2 + PX_FROM_SIDE]);
               }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              }
             }
           } else if (fromSide === "top") {
             let fromRectLower = fromRect.y >= toRect.y2;
@@ -469,7 +468,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([fromRect.x - PX_FROM_SIDE, y2]);
                 }
               }
-              angle = Math.atan2(0, PX_FROM_SIDE);
             } else if (toSide === "top") {
               let xUnderOrOnToRect = x >= toRect.x - PX_FROM_SIDE && x <= toRect.x2; 
               if (fromRectLower) {
@@ -485,7 +483,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x, toRect.y - PX_FROM_SIDE]);
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
                 }
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               } else {
                 let marginFromBorder = toRect.y - fromRect.y2 >= PX_FROM_SIDE + 5 ? PX_FROM_SIDE : MIN_MARGIN_FROM_BORDER;
                 if (xUnderOrOnToRect) {
@@ -494,9 +491,7 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([needTo, y - PX_FROM_SIDE]);
                   lineCoords.push([needTo, toRect.y - marginFromBorder]);
                   lineCoords.push([x2, toRect.y - marginFromBorder]);
-                  angle = Math.atan2(PX_FROM_SIDE, 0);
                 } else {
-                  angle = Math.atan2(PX_FROM_SIDE, 0);
                   if (x2 <= fromRect.x2 + PX_FROM_SIDE) {
                     lineCoords.push([x, y - PX_FROM_SIDE]);
                     lineCoords.push([fromRect.x2 + PX_FROM_SIDE, y - PX_FROM_SIDE]);
@@ -509,7 +504,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                     } else {
                       lineCoords.push([x, toRect.y - PX_FROM_SIDE]);
                       lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
-                      angle = Math.atan2(-PX_FROM_SIDE, 0);
                     }
                     
                   }
@@ -537,11 +531,9 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                     lineCoords.push([x, toRect.y - PX_FROM_SIDE]);
                     lineCoords.push([x2 + PX_FROM_SIDE, toRect.y - PX_FROM_SIDE]);
                     lineCoords.push([x2 + PX_FROM_SIDE, y2]);
-                    angle = Math.atan2(-PX_FROM_SIDE, 0);
                   }
                 }
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "bottom") {
               if (fromRectLower) {
                 if (x !== x2) {
@@ -549,7 +541,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x, toRect.y2 + marginFromBorder]);
                   lineCoords.push([x2, toRect.y2 + marginFromBorder]);
                 }
-                angle = Math.atan2(PX_FROM_SIDE, 0);
               } else {
                 if (x >= toRect.x && x <= toRect.x2 || fromRect.y > toRect.y2) {
                   let needTo = toRect.x2 > fromRect.x2 ? toRect.x2 + PX_FROM_SIDE : fromRect.x2 + PX_FROM_SIDE;
@@ -571,7 +562,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                     lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                   }
                 }
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               }
             }
             
@@ -598,11 +588,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
                 }
               }
-              if (y > y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              }
             } else if (toSide === "right") {
               if (y >= toRect.y - PX_FROM_SIDE && y <= toRect.y2) {
                 let marginFromBorder = toRect.x - fromRect.x2 >= PX_FROM_SIDE * 2 ? PX_FROM_SIDE : 4;
@@ -614,7 +599,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([x2 + PX_FROM_SIDE, y]);
                 lineCoords.push([x2 + PX_FROM_SIDE, y2]);
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "bottom") {
               let xLowerThanToRect = y > toRect.y2;
               if (xLowerThanToRect) {
@@ -630,11 +614,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([toRect.x2 + PX_FROM_SIDE, y2 + PX_FROM_SIDE]);
                   lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                 }
-              }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               }
             }
           } else if (fromSide === "bottom") {
@@ -654,7 +633,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2 - marginFromBorder, y2]);
                 }
               }
-              angle = Math.atan2(0, PX_FROM_SIDE);
             } else if (toSide === "top") {
               let fromRectUpper = fromRect.y2 <= toRect.y;
 
@@ -669,11 +647,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x - PX_FROM_SIDE, y + PX_FROM_SIDE]);
                 lineCoords.push([needToX.x - PX_FROM_SIDE, needToY.y - PX_FROM_SIDE]);
                 lineCoords.push([x2, needToY.y - PX_FROM_SIDE]);
-              }
-              if (y > y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
               }
             } else if (toSide === "right") {
               let fromRectUpper = fromRect.y2 <= toRect.y;
@@ -690,7 +663,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, needToY.y2 + PX_FROM_SIDE]);
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, y2]);
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "bottom") {
               let xLowerThanToRect = y >= toRect.y2 + PX_FROM_SIDE;
               if (xLowerThanToRect) {
@@ -715,11 +687,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                 }
               }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              }
             }
           }
         } else if (x2 <= x) {
@@ -741,7 +708,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([x2 - PX_FROM_SIDE, toRect.y2 + PX_FROM_SIDE]);
                 lineCoords.push([x2 - PX_FROM_SIDE, y2]);
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "top") {
               let fromRectUpper = fromRect.y2 <= toRect.y;
 
@@ -759,17 +725,11 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
                 }
               }
-              if (y > y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              }
             } else if (toSide === "right") {
               if (x !== x2) {
                 lineCoords.push([x - differenceX / 2, y]);
                 lineCoords.push([x - differenceX / 2, y2]);
               }
-              angle = Math.atan2(0, PX_FROM_SIDE);
             } else if (toSide === "bottom") {
               let xLowerThanToRect = y > toRect.y2;
               if (xLowerThanToRect) {
@@ -785,11 +745,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([toRect.x - PX_FROM_SIDE, y2 + PX_FROM_SIDE]);
                   lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                 }
-              }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               }
             }
           } else if (fromSide === "top") {
@@ -808,7 +763,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x - PX_FROM_SIDE, higherRect.y - PX_FROM_SIDE]);
                 lineCoords.push([needToX.x - PX_FROM_SIDE, y2]);
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "top") {
               let xUnderOrOnToRect = x >= toRect.x - PX_FROM_SIDE && x <= toRect.x2;
               if (fromRectLower) {
@@ -839,11 +793,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 }
               }
 
-              if (y > y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              }
             } else if (toSide === "right") {
               if (y2 < y) {
                 lineCoords.push([x, y2]);
@@ -859,7 +808,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([toRect.x2 + marginFromBorder, y2]);
                 }
               }
-              angle = Math.atan2(0, PX_FROM_SIDE);
               
             } else if (toSide === "bottom") {
               if (fromRectLower) {
@@ -868,7 +816,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x, toRect.y2 + marginFromBorder]);
                   lineCoords.push([x2, toRect.y2 + marginFromBorder]);
                 }
-                angle = Math.atan2(PX_FROM_SIDE, 0);
               } else {  
                 if (x >= toRect.x && x <= toRect.x2 || fromRect.y > toRect.y2
                     || toRect.x2 > fromRect.x - MIN_MARGIN_FROM_BORDER) {
@@ -885,14 +832,11 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                   
                 }
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
               }
             }
             
           } else if (fromSide === "right") {
             lineCoords.push([x + PX_FROM_SIDE, y]);
-            let height = y2 <= fromRect.y - PX_FROM_SIDE ?
-                         y - y2 : y - fromRect.y + PX_FROM_SIDE;
 
             if (toSide === "left") {
               let toRectLower = toRect.y >= fromRect.y2 + PX_FROM_SIDE * 2;
@@ -916,7 +860,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 }
               }
 
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "top") {
               let toRectLower = toRect.y >= fromRect.y2;
 
@@ -933,11 +876,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, y]);
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, needToY.y - PX_FROM_SIDE]);
                 lineCoords.push([x2, needToY.y - PX_FROM_SIDE]);
-              }
-              if (y > y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
               }
             } else if (toSide === "right") {
               if (y2 >= fromRect.y && y2 <= fromRect.y2) {
@@ -967,11 +905,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, toRect.y2 + marginFromBorder]);
                 }
               }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              }
             }
           } else if (fromSide === "bottom") {
             if (toSide === "left") {
@@ -989,7 +922,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x - PX_FROM_SIDE, needToY.y2 + PX_FROM_SIDE]);
                 lineCoords.push([needToX.x - PX_FROM_SIDE, y2]);
               }
-              angle = Math.atan2(0, -PX_FROM_SIDE);
             } else if (toSide === "top") {
               let fromRectUpper = fromRect.y2 <= toRect.y;
 
@@ -1004,11 +936,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                 lineCoords.push([needToX.x - PX_FROM_SIDE, needToY.y2 + PX_FROM_SIDE]);
                 lineCoords.push([needToX.x - PX_FROM_SIDE, y2 - PX_FROM_SIDE]);
                 lineCoords.push([x2, y2 - PX_FROM_SIDE]);
-              }
-              if (y >= y2) {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
               }
             } else if (toSide === "right") {
               let xHigherThanX2 = y < y2;
@@ -1026,7 +953,6 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2 + marginFromBorder, y2]);
                 }
               }
-              angle = Math.atan2(0, PX_FROM_SIDE);
             } else if (toSide === "bottom") {
               let xLowerThanToRect = y >= toRect.y2 + PX_FROM_SIDE;
               if (xLowerThanToRect) {
@@ -1051,13 +977,34 @@ const drawArrows = (ctx, x, y, x2, y2) => {
                   lineCoords.push([x2, y2 + PX_FROM_SIDE]);
                 }
               }
-              if (y > y2) {
-                angle = Math.atan2(PX_FROM_SIDE, 0);
-              } else {
-                angle = Math.atan2(-PX_FROM_SIDE, 0);
-              }
             }
           }
+        }
+      }
+      
+      if (toSide === "left") {
+        if (x > x2) {
+          angle = Math.atan2(0, -PX_FROM_SIDE);
+        } else {
+          angle = Math.atan2(0, PX_FROM_SIDE);
+        }
+      } else if (toSide === "top") {
+        if (y > y2) {
+          angle = Math.atan2(-PX_FROM_SIDE, 0);
+        } else {
+          angle = Math.atan2(PX_FROM_SIDE, 0);
+        }
+      } else if (toSide === "right") {
+        if (x > x2) {
+          angle = Math.atan2(0, PX_FROM_SIDE);
+        } else {
+          angle = Math.atan2(0, -PX_FROM_SIDE);
+        }
+      } else if (toSide === "bottom") {
+        if (y > y2) {
+          angle = Math.atan2(PX_FROM_SIDE, 0);
+        } else {
+          angle = Math.atan2(-PX_FROM_SIDE, 0);
         }
       }
     }
@@ -1082,13 +1029,14 @@ const drawArrows = (ctx, x, y, x2, y2) => {
       }
     }
   }
+  
   lineCoords.push([x2, y2]);
   
   lineCoords.forEach(line => {
     ctx.lineTo(line[0], line[1]);
   })
 
-    //draw arrows
+  //draw arrows
 
   if (x2 >= x && y2 >= y) {
     ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
@@ -1099,9 +1047,9 @@ const drawArrows = (ctx, x, y, x2, y2) => {
   } else if (x2 <= x && y2 >= y) {
     ctx.lineTo(x2 + headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
   }
-    
-   ctx.moveTo(x2, y2);
-  
+
+  ctx.moveTo(x2, y2);
+
   if (x2 >= x && y2 >= y) {
     ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
   } else if (x2 <= x && y2 <= y) {
@@ -1120,15 +1068,21 @@ export const drawExistingLines = (ctx, linesArr) => {
     ctx.strokeStyle="black";
 
     let x = el.x1, x2 = el.x2, y = el.y1, y2 = el.y2;
+    let fromRect = el.fromRect,
+        fromSide = el.fromSide,
+        toRect = el.toRect,
+        toSide = el.toSide,
+        lineCoords = el.lineCoords;
+    let rects = {fromRect, fromSide, toRect, toSide}
   
-    drawArrows(ctx, x, y, x2, y2);
+    drawArrows(ctx, x, y, x2, y2, rects, lineCoords);
   })
 }
 
-export const drawSelectedLine = (ctx, x, y, x2, y2) => {
+export const drawSelectedLine = (ctx, x, y, x2, y2, rects, lineCoords) => {
   ctx.beginPath();
   ctx.lineWidth="1";
 	ctx.strokeStyle="black";
   
-  drawArrows(ctx, x, y, x2, y2);
+  drawArrows(ctx, x, y, x2, y2, rects, lineCoords);
 }
