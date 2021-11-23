@@ -4,6 +4,8 @@ export const drawExistingRects = (ctx, rectsArr) => {
     ctx.strokeStyle="black";
     ctx.strokeRect(element.x, element.y, element.width, element.height);
   });
+
+  console.log("recs")
 }
 
 export const drawSelectedRect = (ctx, x, y, width, height) => {

@@ -1,19 +1,24 @@
-const ARROWS_LENGTH = 10; // length of head in pixels
-const PX_FROM_SIDE = 15; // indent from borders in px
-const MIN_MARGIN_FROM_BORDER = 3;  // MIN indent from borders in px
+import { checkSide } from "../utils/clickedOnRectLine.js";
 
-const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
+const ARROWS_LENGTH = 10; // length of head in pixels
+const MIN_MARGIN_FROM_BORDER = 3;  // MIN indent from borders in px
+export const PX_FROM_SIDE = 15; // indent from borders in px
+
+const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = [], isChanged = false, linesArr, rectsArr) => {
   let headLen = ARROWS_LENGTH;
   let differenceX = Math.abs(x2 - x);
   let differenceY = Math.abs(y2 - y);
-  lineCoords.splice(0, lineCoords.length);
+  if (!isChanged) {
+    lineCoords.splice(0, lineCoords.length);
+    lineCoords.push([x, y]);
+  }
 
   let angle = Math.atan2(0, differenceX / 2);
 
   ctx.moveTo(x, y);
-  lineCoords.push([x, y]);
+  
 
-  if (rects && (rects.fromRect || rects.toRect)) {
+  if (rects && (rects.fromRect || rects.toRect) && !isChanged) {
     let fromRect = rects.fromRect;
     let toRect = rects.toRect;
     let fromSide = rects.fromSide;
@@ -387,7 +392,7 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
                   lineCoords.push([x2, fromRect.y - PX_FROM_SIDE]);
                 } else {
                   let needToX = fromRect.x <= toRect.x ? fromRect : toRect;
-                  lineCoords.splice(0, 1);
+                  lineCoords.splice(1, 1);
                   lineCoords.push([needToX.x - PX_FROM_SIDE, y]);
                   lineCoords.push([needToX.x - PX_FROM_SIDE, toRect.y - PX_FROM_SIDE]);
                   lineCoords.push([x2, toRect.y - PX_FROM_SIDE]);
@@ -445,7 +450,7 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
                 lineCoords.push([fromRect.x - PX_FROM_SIDE, toRect.y2 + marginFromBorder]);
                 lineCoords.push([x2, toRect.y2 + marginFromBorder]);
               } else {
-                lineCoords.splice(0, 1);
+                lineCoords.splice(1, 1);
                 lineCoords.push([needTo.x - PX_FROM_SIDE, y]);
                 lineCoords.push([needTo.x - PX_FROM_SIDE, lowerY2Rect.y2 + PX_FROM_SIDE]);
                 lineCoords.push([x2, lowerY2Rect.y2 + PX_FROM_SIDE]);
@@ -872,7 +877,7 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
                 let needToX = fromRect.x2 >= toRect.x2 ? fromRect : toRect;
                 let needToY = fromRect.y <= toRect.y ? fromRect : toRect;
 
-                lineCoords.splice(0, 1);
+                lineCoords.splice(1, 1);
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, y]);
                 lineCoords.push([needToX.x2 + PX_FROM_SIDE, needToY.y - PX_FROM_SIDE]);
                 lineCoords.push([x2, needToY.y - PX_FROM_SIDE]);
@@ -1008,7 +1013,7 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
         }
       }
     }
-  } else {
+  } else if (!isChanged) {
     if (differenceX >= differenceY) {
       if (x2 > x) {
         lineCoords.push([x + differenceX / 2, y]);
@@ -1030,8 +1035,44 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
     }
   }
   
-  lineCoords.push([x2, y2]);
-  
+  if (!isChanged) {
+    lineCoords.push([x2, y2]);
+  } 
+  if (isChanged) {
+    if (rects && (rects.fromRect || rects.toRect)) {
+      let fromRect = rects.fromRect;
+      let toRect = rects.toRect;
+      let fromSide = rects.fromSide;
+      let toSide = rects.toSide;
+
+      if (toSide === "left") {
+        if (x > x2) {
+          angle = Math.atan2(0, -PX_FROM_SIDE);
+        } else {
+          angle = Math.atan2(0, PX_FROM_SIDE);
+        }
+      } else if (toSide === "top") {
+        if (y > y2) {
+          angle = Math.atan2(-PX_FROM_SIDE, 0);
+        } else {
+          angle = Math.atan2(PX_FROM_SIDE, 0);
+        }
+      } else if (toSide === "right") {
+        if (x > x2) {
+          angle = Math.atan2(0, PX_FROM_SIDE);
+        } else {
+          angle = Math.atan2(0, -PX_FROM_SIDE);
+        }
+      } else if (toSide === "bottom") {
+        if (y > y2) {
+          angle = Math.atan2(PX_FROM_SIDE, 0);
+        } else {
+          angle = Math.atan2(-PX_FROM_SIDE, 0);
+        }
+      }
+    }
+  }
+
   lineCoords.forEach(line => {
     ctx.lineTo(line[0], line[1]);
   })
@@ -1059,13 +1100,111 @@ const drawArrows = (ctx, x, y, x2, y2, rects = null, lineCoords = []) => {
   } else if (x2 <= x && y2 >= y) {
     ctx.lineTo(x2 + headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
   }
-  ctx.stroke();
+
+  if (linesArr) {
+    let i = linesArr[1];
+    let line = linesArr[0][i];
+    line.x1 = x;
+    line.y1 = y;
+    line.x2 = x2;
+    line.y2 = y2;
+
+    [line.fromRect, line.toRect].forEach((rect, i) => {
+      
+      if (rect) {
+        let isNotNull = checkSide(rect, {x: x, y: y});
+        if (i === 0) {
+          if (isNotNull) {
+            line.fromRect = rect;
+          } else {
+            let linesIndex = null;
+            line.fromRect.haveLine.forEach((el, i) => {
+              if (el.lineInfo === line) {
+                linesIndex = i;
+              } 
+            });
+            if (linesIndex !== null) {
+              line.fromRect.haveLine.splice(linesIndex, 1);
+              line.fromRect = null;
+            }
+          }
+          line.fromSide = isNotNull
+        } else {
+          isNotNull = checkSide(rect, {x: x2, y: y2});
+          if (isNotNull) {
+            line.toRect = rect;
+          } else {
+            let linesIndex = null;
+            line.toRect.haveLine.forEach((el, i) => {
+              if (el.lineInfo === line) {
+                linesIndex = i;
+              } 
+            });
+            if (linesIndex !== null) {
+              line.toRect.haveLine.splice(linesIndex, 1);
+              line.toRect = null;
+            }
+          }
+          line.toSide = isNotNull;
+        }
+      }
+    })
+
+    if (!line.fromRect || !line.toRect) {
+      rectsArr.forEach(r => {
+        let needPush = true;
+
+        if (r.haveLine.length) {
+          r.haveLine.forEach(l => {
+            if (l.lineInfo.lineCoords + "" === line.lineCoords + "") {
+              needPush = false;
+            }
+          })
+        }
+
+        let isNotNull = checkSide(r, {x: line.x1, y: line.y1}) 
+        if (isNotNull) {
+          line.fromRectSide = isNotNull;
+          line.fromRect = r;
+          line.fromSide = isNotNull;
+          if (needPush) {
+            r.haveLine.push({lineInfo: line, lineIsFromRect: true})
+          }
+        } else {
+          isNotNull = checkSide(r, {x: line.x2, y: line.y2});
+          if (isNotNull) {
+            line.toRectSide = isNotNull;
+            line.toRect = r;
+            line.toSide = isNotNull;
+            if (needPush) {
+              r.haveLine.push({lineInfo: line, lineIsFromRect: false})
+            }
+          }
+        }
+      })
+    }
+
+    line.lineCoords = lineCoords.slice();
+  }
+
+  if (!rectsArr) {
+    ctx.stroke();
+  }
 }
 
-export const drawExistingLines = (ctx, linesArr) => {
-  linesArr.forEach(el => {
+export const drawExistingLines = (ctx, linesArr, changedLines) => {
+  linesArr.forEach((el, i) => {
     ctx.lineWidth="1"
     ctx.strokeStyle="black";
+
+    let isChanged = false;
+
+    console.log(changedLines);
+    
+    if (changedLines) {
+      isChanged = changedLines.find(el => el === i) === undefined ? false : true;
+    }
+    console.log("ISCHANGED", isChanged);
 
     let x = el.x1, x2 = el.x2, y = el.y1, y2 = el.y2;
     let fromRect = el.fromRect,
@@ -1075,14 +1214,39 @@ export const drawExistingLines = (ctx, linesArr) => {
         lineCoords = el.lineCoords;
     let rects = {fromRect, fromSide, toRect, toSide}
   
-    drawArrows(ctx, x, y, x2, y2, rects, lineCoords);
+    drawArrows(ctx, x, y, x2, y2, rects, lineCoords, isChanged);
   })
 }
 
-export const drawSelectedLine = (ctx, x, y, x2, y2, rects, lineCoords) => {
+export const drawSelectedLine = (ctx, x, y, x2, y2, rects, lineCoords, linesArr, rectsArr) => {
   ctx.beginPath();
   ctx.lineWidth="1";
 	ctx.strokeStyle="black";
   
-  drawArrows(ctx, x, y, x2, y2, rects, lineCoords);
+  drawArrows(ctx, x, y, x2, y2, rects, lineCoords, false, linesArr, rectsArr);
+}
+
+export const changeLineSection = (ctx, selectedLine, e, sectionPoint) => {
+  let sectionBeginI = +sectionPoint.dataset.begin;
+  let sectionEndI = +sectionPoint.dataset.end;
+  let lineCoords = selectedLine.lineCoords;
+  let beginCoord = lineCoords[sectionBeginI];
+  let endCoord = lineCoords[sectionEndI];
+  let lineEnd = lineCoords[lineCoords.length - 1].slice();
+
+  if (beginCoord[0] === endCoord[0]) {
+    beginCoord[0] = e.clientX;
+    endCoord[0] = e.clientX;
+  } else {
+    beginCoord[1] = e.clientY;
+    endCoord[1] = e.clientY;
+  }
+  
+  if (sectionEndI === lineCoords.length - 1) {
+    if (JSON.stringify(lineCoords[lineCoords.length - 1]) !== JSON.stringify(lineEnd)) {
+      lineCoords.push(lineEnd);
+    }
+  }
+
+  console.log("KONEX", selectedLine, beginCoord, endCoord, "KONEX");
 }
